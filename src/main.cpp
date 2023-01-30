@@ -25,7 +25,7 @@ void loop() {
     return;
   }
 
-  String message = "Hello from the client ESP32";
+  String message = "cs";
   client.print(message);
   Serial.println("Message sent to server");
 
