@@ -25,12 +25,12 @@ void loop() {
     return;
   }
 
-  String message = "cs";
+  String message = "jsem připojený";
   client.print(message);
-  Serial.println("Message sent to server");
+  Serial.println("zpráva odeslána serveru");
 
-  String response = client.readStringUntil('\r');
-  Serial.println("Response from server: " + response);
+  //String response = client.readStringUntil('\r');
+  //Serial.println("Response from server: " + response);
 
   client.stop();
   delay(3000);
