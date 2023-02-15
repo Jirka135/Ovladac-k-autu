@@ -11,9 +11,19 @@ const char* password = "jirkajebest";
 const char* serverAddress = "192.168.0.110"; // Replace with the IP address of the server ESP32
 const int serverPort = 80;
 
+int cPa, cPd, cPp, cLa, cLd, cLp;
+int lPa, lPd, lPp, lLa, lLd, lLp;
+
 JoyC joyc;
 
 TFT_eSprite display = TFT_eSprite(&M5.Lcd);
+
+void vypis(const char *text){
+  display.fillSprite(TFT_BLACK);
+  display.setCursor(10, 10);
+  display.drawString(text, 0, 0);
+  display.pushSprite(0, 0);
+}
 
 void setup() {
   Serial.begin(115200);
@@ -27,57 +37,43 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("připojuji se k WiFi...");
-    display.setCursor(10, 10);
-    display.drawString("Pripojuji", 0, 0);
-    display.pushSprite(0, 0);
+    vypis("Pripojuji");
   }
-  Serial.println("Pripojeno");
-  display.setCursor(10, 10);
-  display.drawString("Pripojeno", 0, 0);
-  display.pushSprite(0, 0);
 
 }
 
 void loop() {
   WiFiClient client;
-  display.fillSprite(TFT_BLACK);
+
   if (!client.connect(serverAddress, serverPort)) {
     Serial.println("nevim kde je server");
-    display.setCursor(10, 10);
-    display.drawString("nelze pripojit", 0, 0);
-    display.pushSprite(0, 0);
+    vypis("Nelze pripojit");
+    Serial.println(WiFi.localIP());
     delay(1000);
     return;
-  }else{
-    display.setCursor(10, 10);
-    display.drawString("pripojeno", 0, 0);
-    display.pushSprite(0, 0);
   }
-
-
-  //String response = client.readStringUntil('\r');
-  //Serial.println("Response from server: " + response);
-
-  char text_buff[100];
-
+  vypis("Povidam si");
   //1 = pravý 
   //0 = levý
-  int Pa,Pd,Pp,La,Ld,Lp;
-  Pa = joyc.GetAngle(1);
-  Pd = joyc.GetDistance(1);
-  Pp = joyc.GetPress(1);
-  
-  La = joyc.GetAngle(0);
-  Ld = joyc.GetDistance(0);
-  Lp = joyc.GetPress(0);
-  
+  delay(500);
+  cPa = joyc.GetAngle(1);
+  cPd = joyc.GetDistance(1);
+  cPp = joyc.GetPress(1);
+  cLa = joyc.GetAngle(0);
+  cLd = joyc.GetDistance(0);
+  cLp = joyc.GetPress(0);
 
-  std::string zprava = std::to_string(Pa)+" "+ std::to_string(Pd)+" "+ std::to_string(Pp)+" "+ std::to_string(Ld)+" "+ std::to_string(Ld)+" "+ std::to_string(Ld);
-  String z = String(zprava.c_str());
-  client.print(z); 
-  Serial.println("odeslano");
-  delay(100);
-  client.stop();
-
-
+  if (cPa != lPa || cPd != lPd || cPp != lPp || cLa != lLa || cLd != lLd || cLp != lLp){
+    std::string zprava = std::to_string(cPa) + " " + std::to_string(cPd) + " " + std::to_string(cPp) + " " + std::to_string(cLa) + " " + std::to_string(cLd) + " " + std::to_string(cLp);
+    String z = String(zprava.c_str());
+    client.print(z);
+    client.stop();
+    Serial.println("odeslano");
+    lPa = cPa;
+    lPd = cPd;
+    lPp = cPp;
+    lLa = cLa;
+    lLd = cLd;
+    lLp = cLp;
+  }
 }
