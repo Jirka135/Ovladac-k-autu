@@ -1,79 +1,85 @@
-#include <WiFi.h>
+//mac 94-B9-7E-AD-45-D4
 #include <M5StickCPlus.h>
+#include <esp_now.h>
+#include <WiFi.h>
 #include <iostream>
+#include <sstream>
 #include <string>
-#include <Wire.h>
-#include "JoyC.h"
+#include <list>
+#include <wire.h>
 
-const char* ssid = "jirka";
-const char* password = "jirkajebest";
+uint8_t broadcastAddress[] = {0x24, 0x0A, 0xC4, 0xF9, 0x56, 0x94};
 
-const char* serverAddress = "192.168.0.110"; // Replace with the IP address of the server ESP32
-const int serverPort = 80;
-
-int cPa, cPd, cPp, cLa, cLd, cLp;
-int lPa, lPd, lPp, lLa, lLd, lLp;
-
-JoyC joyc;
-
+using namespace std;
 TFT_eSprite display = TFT_eSprite(&M5.Lcd);
+std::stringstream data;
+// Callback when data is received
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len)
+{
+  data.str("");
+  data << (const char*)incomingData;
+  Serial.println(data.str().c_str());
+}
 
-void vypis(const char *text){
+
+void vypis(const char *text,int posx,int posy){
   display.fillSprite(TFT_BLACK);
-  display.setCursor(10, 10);
+  display.setCursor(posx, posy);
   display.drawString(text, 0, 0);
   display.pushSprite(0, 0);
 }
 
-void setup() {
+void setup()
+{
+  // Init Serial Monitor
   Serial.begin(115200);
+  vypis("Start",10,10);
   M5.begin();
-  display.createSprite(135, 240);
+  Wire.begin();
+  display.createSprite(300,100);
   display.fillSprite(TFT_BLACK);
-  display.setTextColor(TFT_WHITE, TFT_BLACK);
-  display.setTextSize(2);
-  Wire.begin(0, 26, 400000UL);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("připojuji se k WiFi...");
-    vypis("Pripojuji");
+  display.setTextColor(TFT_WHITE);
+  display.setTextSize(3);
+  // Set device as a Wi-Fi Station
+  WiFi.mode(WIFI_STA);
+
+  // Init ESP-NOW
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
   }
+
+  // Register peer
+  esp_now_peer_info_t peerInfo;
+  memset(&peerInfo, 0, sizeof(peerInfo));
+  for (int ii = 0; ii < 6; ++ii )
+  {
+    peerInfo.peer_addr[ii] = (uint8_t) broadcastAddress[ii];
+  }
+  peerInfo.channel = 0;
+  peerInfo.encrypt = false;
+
+  // Add peer
+  if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+    Serial.println("Failed to add peer");
+    return;
+  }
+
+  vypis("Hledam kamarada",10,10);
+  esp_now_register_recv_cb(OnDataRecv);
 
 }
 
-void loop() {
-  WiFiClient client;
-
-  if (!client.connect(serverAddress, serverPort)) {
-    Serial.println("nevim kde je server");
-    vypis("Nelze pripojit");
-    Serial.println(WiFi.localIP());
-    delay(1000);
-    return;
+void loop()
+{
+  // Send a message
+  vypis("Povídáme si",10,10);
+  const char* outgoingData = "Hello from ESP32";
+  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t*) outgoingData, strlen(outgoingData) + 1);
+  if (result == ESP_OK) {
+    Serial.println("odesláno");
   }
-  vypis("Povidam si");
-  //1 = pravý 
-  //0 = levý
-  delay(500);
-  cPa = joyc.GetAngle(1);
-  cPd = joyc.GetDistance(1);
-  cPp = joyc.GetPress(1);
-  cLa = joyc.GetAngle(0);
-  cLd = joyc.GetDistance(0);
-  cLp = joyc.GetPress(0);
-
-  if (cPa != lPa || cPd != lPd || cPp != lPp || cLa != lLa || cLd != lLd || cLp != lLp){
-    std::string zprava = std::to_string(cPa) + " " + std::to_string(cPd) + " " + std::to_string(cPp) + " " + std::to_string(cLa) + " " + std::to_string(cLd) + " " + std::to_string(cLp);
-    String z = String(zprava.c_str());
-    client.print(z);
-    client.stop();
-    Serial.println("odeslano");
-    lPa = cPa;
-    lPd = cPd;
-    lPp = cPp;
-    lLa = cLa;
-    lLd = cLd;
-    lLp = cLp;
-  }
+  
+  // Wait for 5 seconds before sending the next message
+  delay(5000);  
 }
