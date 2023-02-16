@@ -7,9 +7,13 @@
 #include <string>
 #include <list>
 #include <wire.h>
+#include "JoyC.h"
 
 uint8_t broadcastAddress[] = {0x24, 0x0A, 0xC4, 0xF9, 0x56, 0x94};
 
+int Pa,Pd,Pp,La,Lp,Ld;
+
+JoyC joyc;
 using namespace std;
 TFT_eSprite display = TFT_eSprite(&M5.Lcd);
 std::stringstream data;
@@ -33,6 +37,8 @@ void setup()
 {
   // Init Serial Monitor
   Serial.begin(115200);
+  M5.begin();
+  Wire.begin(0, 26, 400000UL);
   vypis("Start",10,10);
   M5.begin();
   Wire.begin();
@@ -72,9 +78,20 @@ void setup()
 
 void loop()
 {
+  //1 = pravá
+  //2 = levá
+  Pa = joyc.GetAngle(1);
+  Pd = joyc.GetDistance(1);
+  Pp = joyc.GetPress(1);
+  La = joyc.GetAngle(0);
+  Ld = joyc.GetDistance(0);
+  Lp = joyc.GetPress(0);
   // Send a message
-  vypis("Povídáme si",10,10);
-  const char* outgoingData = "Hello from ESP32";
+  vypis("Povidame si",10,10);
+  
+  std::string hodnoty = std::to_string(Pa) + " " + std::to_string(Pd) + " " + std::to_string(Pp) + " " + std::to_string(La) + " " + std::to_string(Lp) + " " + std::to_string(Ld);
+  const char* outgoingData = hodnoty.c_str();
+
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t*) outgoingData, strlen(outgoingData) + 1);
   if (result == ESP_OK) {
     Serial.println("odesláno");
