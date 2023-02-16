@@ -94,7 +94,6 @@ void loop()
   Ld = joyc.GetDistance(0);
   Lp = joyc.GetPress(0);
   // Send a message
-  vypis("Povidame si",10,10);
   
   if (Pa != Pa_copy || Pd != Pd_copy || Pp != Pp_copy || La != La_copy || Lp != Lp_copy || Ld != Ld_copy) {
     std::string hodnoty = std::to_string(Pa) + " " + std::to_string(Pd) + " " + std::to_string(Pp) + " " + std::to_string(La) + " " + std::to_string(Lp) + " " + std::to_string(Ld);
@@ -109,6 +108,8 @@ void loop()
     La_copy = La;
     Lp_copy = Lp;
     Ld_copy = Ld;
+    display.fillSprite(TFT_BLACK);
+    vypis("Povidame si",10,10);
   }
   delay(100);
   // Wait for 5 seconds before sending the next message  
