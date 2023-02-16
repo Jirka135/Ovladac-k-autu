@@ -11,7 +11,19 @@
 
 uint8_t broadcastAddress[] = {0x24, 0x0A, 0xC4, 0xF9, 0x56, 0x94};
 
-int Pa,Pd,Pp,La,Lp,Ld;
+int Pa = 0;
+int Pd = 0;
+int Pp = 0;
+int La = 0;
+int Lp = 0;
+int Ld = 0;
+
+int Pa_copy = Pa;
+int Pd_copy = Pd;
+int Pp_copy = Pp;
+int La_copy = La;
+int Lp_copy = Lp;
+int Ld_copy = Ld;
 
 JoyC joyc;
 using namespace std;
@@ -45,7 +57,7 @@ void setup()
   display.createSprite(300,100);
   display.fillSprite(TFT_BLACK);
   display.setTextColor(TFT_WHITE);
-  display.setTextSize(3);
+  display.setTextSize(2);
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
 
@@ -88,15 +100,22 @@ void loop()
   Lp = joyc.GetPress(0);
   // Send a message
   vypis("Povidame si",10,10);
-  
   std::string hodnoty = std::to_string(Pa) + " " + std::to_string(Pd) + " " + std::to_string(Pp) + " " + std::to_string(La) + " " + std::to_string(Lp) + " " + std::to_string(Ld);
-  const char* outgoingData = hodnoty.c_str();
-
-  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t*) outgoingData, strlen(outgoingData) + 1);
-  if (result == ESP_OK) {
-    Serial.println("odesláno");
+  if (Pa != Pa_copy || Pd != Pd_copy || Pp != Pp_copy || La != La_copy || Lp != Lp_copy || Ld != Ld_copy) {
+    const char* outgoingData = hodnoty.c_str();
+    Serial.println(outgoingData);
+    esp_err_t result = esp_now_send(broadcastAddress, (uint8_t*) outgoingData, strlen(outgoingData) + 1);
+    if (result == ESP_OK) {
+      Serial.println("odesláno");
+    }
+    Pa_copy = Pa;
+    Pd_copy = Pd;
+    Pp_copy = Pp;
+    La_copy = La;
+    Lp_copy = Lp;
+    Ld_copy = Ld;
   }
   
   // Wait for 5 seconds before sending the next message
-  delay(5000);  
+  delay(100);  
 }
