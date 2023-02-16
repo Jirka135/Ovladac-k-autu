@@ -28,21 +28,20 @@ int Ld_copy = Ld;
 JoyC joyc;
 using namespace std;
 TFT_eSprite display = TFT_eSprite(&M5.Lcd);
-std::stringstream data;
-// Callback when data is received
-void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len)
-{
-  data.str("");
-  data << (const char*)incomingData;
-  Serial.println(data.str().c_str());
+
+void vypis(const char *text,int posx,int posy){
+  display.setCursor(posx, posy);
+  display.drawString(text, posx, posy);
+  display.pushSprite(0, 0);
 }
 
 
-void vypis(const char *text,int posx,int posy){
-  display.fillSprite(TFT_BLACK);
-  display.setCursor(posx, posy);
-  display.drawString(text, 0, 0);
-  display.pushSprite(0, 0);
+// Callback when data is received
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len)
+{
+  std::string data(reinterpret_cast<const char*>(incomingData), len);
+  Serial.println(data.c_str());
+  vypis(data.c_str(),10,40);
 }
 
 void setup()
@@ -50,10 +49,8 @@ void setup()
   // Init Serial Monitor
   Serial.begin(115200);
   M5.begin();
-  Wire.begin(0, 26, 400000UL);
   vypis("Start",10,10);
-  M5.begin();
-  Wire.begin();
+  Wire.begin(0, 26);
   display.createSprite(300,100);
   display.fillSprite(TFT_BLACK);
   display.setTextColor(TFT_WHITE);
@@ -82,8 +79,6 @@ void setup()
     Serial.println("Failed to add peer");
     return;
   }
-
-  vypis("Hledam kamarada",10,10);
   esp_now_register_recv_cb(OnDataRecv);
 
 }
@@ -100,13 +95,13 @@ void loop()
   Lp = joyc.GetPress(0);
   // Send a message
   vypis("Povidame si",10,10);
-  std::string hodnoty = std::to_string(Pa) + " " + std::to_string(Pd) + " " + std::to_string(Pp) + " " + std::to_string(La) + " " + std::to_string(Lp) + " " + std::to_string(Ld);
+  
   if (Pa != Pa_copy || Pd != Pd_copy || Pp != Pp_copy || La != La_copy || Lp != Lp_copy || Ld != Ld_copy) {
+    std::string hodnoty = std::to_string(Pa) + " " + std::to_string(Pd) + " " + std::to_string(Pp) + " " + std::to_string(La) + " " + std::to_string(Lp) + " " + std::to_string(Ld);
     const char* outgoingData = hodnoty.c_str();
-    Serial.println(outgoingData);
     esp_err_t result = esp_now_send(broadcastAddress, (uint8_t*) outgoingData, strlen(outgoingData) + 1);
     if (result == ESP_OK) {
-      Serial.println("odesláno");
+      Serial.println("ok");
     }
     Pa_copy = Pa;
     Pd_copy = Pd;
@@ -115,7 +110,6 @@ void loop()
     Lp_copy = Lp;
     Ld_copy = Ld;
   }
-  
-  // Wait for 5 seconds before sending the next message
-  delay(100);  
+  delay(100);
+  // Wait for 5 seconds before sending the next message  
 }
