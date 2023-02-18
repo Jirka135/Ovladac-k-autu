@@ -111,6 +111,6 @@ void loop()
     display.fillSprite(TFT_BLACK);
     vypis("Povidame si",10,10);
   }
-  delay(100);
+  //delay(100);
   // Wait for 5 seconds before sending the next message  
 }
