@@ -86,7 +86,7 @@ void setup()
 void loop()
 {
   //1 = pravá
-  //2 = levá
+  //2 = levásad
   Pa = joyc.GetAngle(1);
   Pd = joyc.GetDistance(1);
   Pp = joyc.GetPress(1);
