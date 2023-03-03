@@ -40,6 +40,7 @@ void OnDataRecv(const uint8_t* mac, const uint8_t* incomingData, int len) {
   c_d = std::stoi(data);
   if (c_d != last_d){
     last_d = c_d;
+    display.fillSprite(TFT_BLACK);
     vypis(data.c_str(), 10, 40);
     vypis("Povidame si",10,10);
     delayMicroseconds(100);
